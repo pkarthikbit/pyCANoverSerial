@@ -1,6 +1,6 @@
 # pyCANoverSerial
 
-Based on https://python-can.readthedocs.io/en/stable/interfaces/serial.html, the serial format is adapted as,
+It is a Serial communication based low cost Canalyzer compatible with Windows and Linux. Based on https://python-can.readthedocs.io/en/stable/interfaces/serial.html, the serial format is adapted as,
 ```
 # +=============+===============+========================+=========================+=========================+=========+==============+
 # |    Desc     |Start of frame |Timestamp               | DLC                     | Arbitration ID          | Payload | End of frame |
