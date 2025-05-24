@@ -13,15 +13,26 @@
 
 import serial
 ser = serial.Serial('/dev/ttyUSB0', 115200)  # open serial port
-print(ser.baudrate)         # check which port was really used
 
-for i in range(10):
-    # receive from CAN
-    RxValue = ser.read(19)         
-    print(RxValue.hex(' '))
-    # send in CAN
-    TxValue = 'AA 00 00 00 00 02 00 00 07 e8 11 22 33 44 55 66 77 88 BB'
+def can_send(tx_canid, tx_data):
+    TxValue = 'AA 00 00 00 00 08'+ tx_canid + tx_data + 'BB'
     TxValue = bytes.fromhex(TxValue)
     ser.write(TxValue)
-    print(TxValue.hex(' '))
+    can_receive('00 00 07 e8')
+
+def can_receive(rx_canid):
+    RxValue = ser.read(19)         
+    if (rx_canid == RxValue.hex(' ')[18:29]):
+        if('04 41' == RxValue.hex(' ')[30:35]):
+            #PID0C 2 bytes Engine speed 	0 	16,383.75 	rpm 
+            if('0c' == RxValue.hex(' ')[36:38]):
+                pid_val = (int(RxValue.hex(' ')[39:44].replace(" ", ""), 16)) /4
+                print('Engine speed = ', pid_val, 'rpm')
+
+for i in range(10):
+    #PID0C 2 bytes Engine speed 	0 	16,383.75 	rpm 
+    can_send('00 00 07 e0', '02 01 0C 55 55 55 55 55')
+    
+
+
 ser.close()             # close port
