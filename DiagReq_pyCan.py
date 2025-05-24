@@ -20,7 +20,7 @@ for i in range(10):
     RxValue = ser.read(19)         
     print(RxValue.hex(' '))
     # send in CAN
-    TxValue = 'AA 00 00 00 00 02 00 00 07 e0 11 22 33 44 55 66 77 88 BB'
+    TxValue = 'AA 00 00 00 00 02 00 00 07 e8 11 22 33 44 55 66 77 88 BB'
     TxValue = bytes.fromhex(TxValue)
     ser.write(TxValue)
     print(TxValue.hex(' '))
