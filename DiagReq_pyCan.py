@@ -37,16 +37,11 @@ plt.title('Engine speed over Time')
 plt.xlabel('Samples')
 plt.ylabel('Engine speed (rpm)')
 
-def set_value(val):
-    graph_val = val
-
-def get_value():
-    return graph_val
-
 # This function is called periodically from FuncAnimation
 def animate(i, ys):
-    # Read temperature (Celsius) from TMP102
-    temp_c = round(get_value(), 4)
+    #PID0C 2 bytes Engine speed 	0 	16,383.75 	rpm 
+    retVal = can_send('00 00 07 e0', '02 01 0C 55 55 55 55 55')
+    temp_c = round(retVal, 4)
     temp_f=(temp_c*9/5)+32
     # Add y to list
     ys.append(temp_f)
@@ -60,7 +55,8 @@ def can_send(tx_canid, tx_data):
     TxValue = 'AA 00 00 00 00 08'+ tx_canid + tx_data + 'BB'
     TxValue = bytes.fromhex(TxValue)
     ser.write(TxValue)
-    can_receive('00 00 07 e8')
+    retVal = can_receive('00 00 07 e8')
+    return retVal
 
 def can_receive(rx_canid):
     RxValue = ser.read(19)         
@@ -69,7 +65,7 @@ def can_receive(rx_canid):
             #PID0C 2 bytes Engine speed 	0 	16,383.75 	rpm 
             if('0c' == RxValue.hex(' ')[36:38]):
                 pid_val = (int(RxValue.hex(' ')[39:44].replace(" ", ""), 16)) /4
-                set_value(pid_val)
+                return pid_val
 
 ani = animation.FuncAnimation(fig,
     animate,
@@ -77,10 +73,5 @@ ani = animation.FuncAnimation(fig,
     interval=50,
     blit=True)
 plt.show()
-
-for i in range(1000):
-    #PID0C 2 bytes Engine speed 	0 	16,383.75 	rpm 
-    can_send('00 00 07 e0', '02 01 0C 55 55 55 55 55')
-    # Set up plot to call animate() function periodically
 
 ser.close()             # close port
