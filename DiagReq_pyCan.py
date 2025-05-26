@@ -12,7 +12,49 @@
 # +-------------+---------------+------------------------+-------------------------+-------------------------+---------+--------------+
 
 import serial
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+
 ser = serial.Serial('/dev/ttyUSB0', 115200)  # open serial port
+
+# Parameters
+x_len = 200         # Number of points to display
+y_range = [0, 7000]  # Range of possible Y values to display
+graph_val = 0
+
+# Create figure for plotting
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1)
+xs = list(range(0, 200))
+ys = [0] * x_len
+ax.set_ylim(y_range)
+
+# Create a blank line. We will update the line in animate
+line, = ax.plot(xs, ys)
+
+# Add labels
+plt.title('Engine speed over Time')
+plt.xlabel('Samples')
+plt.ylabel('Engine speed (rpm)')
+
+def set_value(val):
+    graph_val = val
+
+def get_value():
+    return graph_val
+
+# This function is called periodically from FuncAnimation
+def animate(i, ys):
+    # Read temperature (Celsius) from TMP102
+    temp_c = round(get_value(), 4)
+    temp_f=(temp_c*9/5)+32
+    # Add y to list
+    ys.append(temp_f)
+    # Limit y list to set number of items
+    ys = ys[-x_len:]
+    # Update line with new Y values
+    line.set_ydata(ys)
+    return line,
 
 def can_send(tx_canid, tx_data):
     TxValue = 'AA 00 00 00 00 08'+ tx_canid + tx_data + 'BB'
@@ -27,12 +69,18 @@ def can_receive(rx_canid):
             #PID0C 2 bytes Engine speed 	0 	16,383.75 	rpm 
             if('0c' == RxValue.hex(' ')[36:38]):
                 pid_val = (int(RxValue.hex(' ')[39:44].replace(" ", ""), 16)) /4
-                print('Engine speed = ', pid_val, 'rpm')
+                set_value(pid_val)
 
-for i in range(10):
+ani = animation.FuncAnimation(fig,
+    animate,
+    fargs=(ys,),
+    interval=50,
+    blit=True)
+plt.show()
+
+for i in range(1000):
     #PID0C 2 bytes Engine speed 	0 	16,383.75 	rpm 
     can_send('00 00 07 e0', '02 01 0C 55 55 55 55 55')
-    
-
+    # Set up plot to call animate() function periodically
 
 ser.close()             # close port
